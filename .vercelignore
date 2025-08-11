@@ -1,0 +1,44 @@
+# Dependencies
+node_modules
+
+# Environment files (use Vercel environment variables instead)
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Build outputs (will be rebuilt on Vercel)
+dist
+build
+coverage
+
+# Development files
+.vscode
+.idea
+*.swp
+*.swo
+
+# Test files
+src/tests
+**/*.test.ts
+**/*.test.js
+**/*.spec.ts
+**/*.spec.js
+test-*.js
+
+# Documentation (optional, remove if you want docs deployed)
+docs
+src/docs
+
+# Logs
+logs
+*.log
+
+# Temporary files
+*.tmp
+*.temp
+
+# OS files
+.DS_Store
+Thumbs.db

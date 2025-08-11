@@ -1,0 +1,56 @@
+{
+  "version": 2,
+  "name": "tourist-hub-api",
+  "builds": [
+    {
+      "src": "api/index.ts",
+      "use": "@vercel/node",
+      "config": {
+        "includeFiles": [
+          "src/**",
+          "prisma/**",
+          "package.json",
+          "tsconfig.json",
+          ".env.example"
+        ]
+      }
+    }
+  ],
+  "routes": [
+    {
+      "src": "/health",
+      "dest": "/api/index.ts"
+    },
+    {
+      "src": "/health/(.*)",
+      "dest": "/api/index.ts"
+    },
+    {
+      "src": "/api/(.*)",
+      "dest": "/api/index.ts"
+    },
+    {
+      "src": "/api-docs",
+      "dest": "/api/index.ts"
+    },
+    {
+      "src": "/api-docs/(.*)",
+      "dest": "/api/index.ts"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/api/index.ts"
+    }
+  ],
+  "env": {
+    "NODE_ENV": "production"
+  },
+  "functions": {
+    "api/index.ts": {
+      "maxDuration": 30
+    }
+  },
+  "regions": ["iad1"],
+  "installCommand": "npm install",
+  "buildCommand": "npm run vercel-build"
+}

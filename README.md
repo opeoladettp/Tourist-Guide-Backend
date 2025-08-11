@@ -18,6 +18,31 @@ Tourist Hub API backend for tour management and collaboration between tourists a
 - Node.js >= 16.0.0
 - npm >= 8.0.0
 - PostgreSQL database
+
+## 🚀 Deployment
+
+### Deploy to Vercel (Recommended)
+
+This project is optimized for deployment on Vercel:
+
+1. **Quick Deploy**: [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/your-username/tourist-hub-api)
+
+2. **Manual Deployment**:
+   ```bash
+   # Install Vercel CLI
+   npm install -g vercel
+   
+   # Login and deploy
+   vercel login
+   vercel --prod
+   ```
+
+3. **Environment Setup**: See [VERCEL_DEPLOYMENT.md](./VERCEL_DEPLOYMENT.md) for detailed configuration.
+
+### Other Deployment Options
+
+- **Docker**: See [docs/deployment.md](./docs/deployment.md) for Docker and Kubernetes deployment
+- **Traditional Server**: Follow the production deployment guide in the docs
 - Redis (for caching and sessions)
 
 ### Installation
