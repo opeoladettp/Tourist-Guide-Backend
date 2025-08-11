@@ -6,6 +6,7 @@
       "src": "api/index.ts",
       "use": "@vercel/node",
       "config": {
+        "maxDuration": 30,
         "includeFiles": [
           "src/**",
           "prisma/**",
@@ -44,11 +45,6 @@
   ],
   "env": {
     "NODE_ENV": "production"
-  },
-  "functions": {
-    "api/index.ts": {
-      "maxDuration": 30
-    }
   },
   "regions": ["iad1"],
   "installCommand": "npm install",
