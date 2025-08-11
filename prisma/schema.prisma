@@ -1,0 +1,281 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Simple model for testing database connection
+model HealthCheck {
+  id        Int      @id @default(autoincrement())
+  timestamp DateTime @default(now())
+  status    String   @default("healthy")
+}
+
+// User model with all required fields and constraints
+model User {
+  userId        String   @id @default(cuid())
+  firstName     String
+  middleName    String?
+  lastName      String
+  emailAddress  String   @unique
+  phoneNumber   String
+  country       String
+  passwordHash  String
+  userType      UserType
+  status        UserStatus @default(ACTIVE)
+  passportNumber String?
+  dateOfBirth   DateTime?
+  gender        String?
+  providerId    String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Relations
+  provider              Provider? @relation(fields: [providerId], references: [providerId])
+  documents             Document[]
+  touristRegistrations  TouristRegistration[] @relation("TouristRegistrations")
+  approvedRegistrations TouristRegistration[] @relation("ApprovedRegistrations")
+  refreshTokens         RefreshToken[]
+
+  @@map("users")
+}
+
+// Refresh token model for JWT token rotation
+model RefreshToken {
+  tokenId     String   @id
+  userId      String
+  expiresAt   DateTime
+  isRevoked   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  user        User     @relation(fields: [userId], references: [userId], onDelete: Cascade)
+
+  @@map("refresh_tokens")
+}
+
+enum UserType {
+  SYSTEM_ADMIN
+  PROVIDER_ADMIN
+  TOURIST
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+}
+
+// Provider model with company information fields
+model Provider {
+  providerId          String   @id @default(cuid())
+  companyName         String
+  country             String
+  addressLine1        String
+  addressLine2        String?
+  city                String
+  stateRegion         String
+  companyDescription  String
+  phoneNumber         String
+  emailAddress        String   @unique
+  corpIdTaxId         String   @unique
+  isIsolatedInstance  Boolean  @default(true)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  // Relations
+  users               User[]
+  tourEvents          CustomTourEvent[]
+
+  @@map("providers")
+}
+
+// Document model for file metadata tracking
+model Document {
+  documentId        String      @id @default(cuid())
+  userId            String
+  type              DocumentType
+  fileName          String
+  description       String?
+  uploadedByUserId  String
+  uploadDate        DateTime    @default(now())
+  fileStoragePath   String
+  fileSize          Int
+  mimeType          String
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+
+  // Relations
+  user              User        @relation(fields: [userId], references: [userId])
+
+  @@map("documents")
+}
+
+enum DocumentType {
+  PASSPORT
+  TICKET
+  TOUR_FORM
+  OTHER
+}
+
+// Tour template model with site relationships
+model TourTemplate {
+  templateId          String        @id @default(cuid())
+  templateName        String
+  type                String
+  year                Int
+  startDate           DateTime
+  endDate             DateTime
+  detailedDescription String
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
+
+  // Relations
+  sitesToVisit        SiteToVisit[]
+  tourEvents          CustomTourEvent[]
+
+  @@map("tour_templates")
+}
+
+// Site to visit nested model structure
+model SiteToVisit {
+  siteId              String       @id @default(cuid())
+  templateId          String
+  siteName            String
+  description         String?
+  location            String
+  visitDuration       String       // e.g., "2 hours", "Half day"
+  estimatedCost       Decimal?     @db.Decimal(10, 2)
+  category            SiteCategory
+  isOptional          Boolean      @default(false)
+  orderIndex          Int          // For ordering sites in the template
+  createdAt           DateTime     @default(now())
+  updatedAt           DateTime     @updatedAt
+
+  // Relations
+  template            TourTemplate @relation(fields: [templateId], references: [templateId], onDelete: Cascade)
+
+  @@map("sites_to_visit")
+}
+
+enum SiteCategory {
+  HISTORICAL
+  RELIGIOUS
+  CULTURAL
+  NATURAL
+  ENTERTAINMENT
+  SHOPPING
+  RESTAURANT
+  ACCOMMODATION
+  TRANSPORTATION
+  OTHER
+}
+
+// Custom tour event model with complex relationships
+model CustomTourEvent {
+  tourEventId               String              @id @default(cuid())
+  providerId                String
+  templateId                String?
+  customTourName            String
+  startDate                 DateTime
+  endDate                   DateTime
+  packageType               String
+  place1Hotel               String
+  place2Hotel               String
+  numberOfAllowedTourists   Int
+  remainingTourists         Int
+  groupChatInfo             String?
+  status                    TourEventStatus     @default(DRAFT)
+  createdAt                 DateTime            @default(now())
+  updatedAt                 DateTime            @updatedAt
+
+  // Relations
+  provider                  Provider            @relation(fields: [providerId], references: [providerId])
+  template                  TourTemplate?       @relation(fields: [templateId], references: [templateId])
+  registrations             TouristRegistration[]
+  activities                Activity[]
+
+  @@map("custom_tour_events")
+}
+
+enum TourEventStatus {
+  DRAFT
+  ACTIVE
+  FULL
+  COMPLETED
+  CANCELLED
+}
+
+// Tourist registration tracking
+model TouristRegistration {
+  registrationId      String                    @id @default(cuid())
+  tourEventId         String
+  touristUserId       String
+  registrationDate    DateTime                  @default(now())
+  status              RegistrationStatus        @default(PENDING)
+  approvedByUserId    String?
+  approvedDate        DateTime?
+  rejectedReason      String?
+  createdAt           DateTime                  @default(now())
+  updatedAt           DateTime                  @updatedAt
+
+  // Relations
+  tourEvent           CustomTourEvent           @relation(fields: [tourEventId], references: [tourEventId], onDelete: Cascade)
+  tourist             User                      @relation("TouristRegistrations", fields: [touristUserId], references: [userId])
+  approvedBy          User?                     @relation("ApprovedRegistrations", fields: [approvedByUserId], references: [userId])
+
+  // Ensure one registration per tourist per tour event
+  @@unique([tourEventId, touristUserId])
+  @@map("tourist_registrations")
+}
+
+enum RegistrationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELLED
+}
+
+// Activity type model for managing default activity types
+model ActivityType {
+  activityTypeId      String              @id @default(cuid())
+  typeName            String              @unique
+  description         String?
+  isDefault           Boolean             @default(true)
+  isActive            Boolean             @default(true)
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @updatedAt
+
+  @@map("activity_types")
+}
+
+// Activity model for daily schedule management
+model Activity {
+  activityId          String              @id @default(cuid())
+  tourEventId         String
+  activityDate        DateTime
+  startTime           String
+  endTime             String
+  activityName        String
+  description         String?
+  location            String?
+  activityType        String
+  isOptional          Boolean             @default(false)
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @updatedAt
+
+  // Relations
+  tourEvent           CustomTourEvent     @relation(fields: [tourEventId], references: [tourEventId], onDelete: Cascade)
+
+  @@map("activities")
+}
